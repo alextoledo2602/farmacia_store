@@ -1,0 +1,678 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}Dashboard - FarmaOnline{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    /* ===== PANEL LATERAL ===== */
+    .dashboard-wrapper {
+        display: flex;
+        gap: 20px;
+        padding: 20px;
+        max-width: 100%;
+    }
+    
+    .sidebar {
+        min-width: 250px;
+        max-width: 280px;
+        background: white;
+        border-radius: 15px;
+        padding: 20px 0;
+        box-shadow: 0 4px 15px rgba(26, 82, 118, 0.1);
+        height: fit-content;
+        position: sticky;
+        top: 20px;
+    }
+    
+    .sidebar .sidebar-header {
+        padding: 0 20px 15px 20px;
+        border-bottom: 2px solid #f0f0f0;
+        margin-bottom: 10px;
+    }
+    
+    .sidebar .sidebar-header h5 {
+        color: var(--color-primary);
+        font-weight: 700;
+        margin: 0;
+    }
+    
+    .sidebar .sidebar-header small {
+        color: #6c757d;
+        font-size: 0.8rem;
+    }
+    
+    .sidebar .nav-item {
+        padding: 8px 20px;
+        transition: all 0.3s ease;
+        border-left: 3px solid transparent;
+    }
+    
+    .sidebar .nav-item:hover {
+        background: rgba(26, 82, 118, 0.05);
+        border-left-color: var(--color-primary);
+    }
+    
+    .sidebar .nav-item a {
+        color: #2c3e50;
+        text-decoration: none;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        font-weight: 500;
+    }
+    
+    .sidebar .nav-item a i {
+        width: 20px;
+        color: var(--color-primary);
+    }
+    
+    .sidebar .nav-item.active {
+        background: rgba(26, 82, 118, 0.08);
+        border-left-color: var(--color-primary);
+    }
+    
+    .sidebar .nav-item.active a {
+        color: var(--color-primary);
+    }
+    
+    .sidebar .nav-divider {
+        height: 1px;
+        background: #e9ecef;
+        margin: 10px 20px;
+    }
+    
+    /* ===== CONTENIDO PRINCIPAL ===== */
+    .main-dashboard {
+        flex: 1;
+        min-width: 0;
+    }
+    
+    .metricas {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 15px;
+        margin-bottom: 25px;
+    }
+    
+    .metricas .card {
+        border-radius: 15px;
+        border: none;
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+        box-shadow: 0 4px 15px rgba(26, 82, 118, 0.08);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .metricas .card:hover {
+        transform: translateY(-5px);
+        box-shadow: 0 8px 25px rgba(26, 82, 118, 0.15);
+    }
+    
+    .metricas .card .card-body {
+        padding: 15px 20px;
+    }
+    
+    .metricas .card h6 {
+        font-size: 0.8rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 5px;
+    }
+    
+    .metricas .card h3 {
+        font-size: 1.8rem;
+        font-weight: 700;
+        margin: 0;
+    }
+    
+    .metricas .card .icon {
+        font-size: 2rem;
+        opacity: 0.3;
+        position: absolute;
+        right: 15px;
+        top: 15px;
+    }
+    
+    /* ===== GRÁFICOS ===== */
+    .chart-container {
+        background: white;
+        border-radius: 15px;
+        padding: 20px;
+        box-shadow: 0 4px 15px rgba(26, 82, 118, 0.08);
+        margin-bottom: 20px;
+        height: 100%;
+    }
+    
+    .chart-container h5 {
+        color: var(--color-primary);
+        margin-bottom: 15px;
+        font-weight: 600;
+    }
+    
+    .chart-container canvas {
+        max-height: 250px;
+        max-width: 100%;
+    }
+    
+    /* ===== TABLAS ===== */
+    .bg-secondary-custom {
+        background: var(--color-secondary) !important;
+        color: white;
+    }
+    
+    .bg-primary-custom {
+        background: var(--color-primary) !important;
+        color: white;
+    }
+    
+    .text-primary-custom {
+        color: var(--color-primary) !important;
+    }
+    
+    .text-secondary-custom {
+        color: var(--color-secondary) !important;
+    }
+    
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 992px) {
+        .dashboard-wrapper {
+            flex-direction: column;
+        }
+        
+        .sidebar {
+            min-width: 100%;
+            max-width: 100%;
+            position: relative;
+            top: 0;
+        }
+        
+        .sidebar .nav-item {
+            padding: 6px 15px;
+        }
+        
+        .metricas {
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+        }
+    }
+    
+    @media (max-width: 576px) {
+        .metricas {
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        
+        .metricas .card h3 {
+            font-size: 1.3rem;
+        }
+        
+        .chart-container canvas {
+            max-height: 180px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="dashboard-wrapper">
+    <!-- ===== PANEL LATERAL ===== -->
+    <aside class="sidebar">
+        <div class="sidebar-header">
+            <h5><i class="fas fa-prescription-bottle"></i> FarmaOnline</h5>
+            <small>Panel de Administración</small>
+        </div>
+        
+        <div class="nav-item active">
+            <a href="{% url 'core:dashboard' %}">
+                <i class="fas fa-chart-line"></i> Dashboard
+            </a>
+        </div>
+        
+        <div class="nav-divider"></div>
+        
+        <!-- Nueva Venta -->
+        <div class="nav-item">
+            <a href="{% url 'core:registrar_venta' %}" style="color: #27ae60; font-weight: 700;">
+                <i class="fas fa-cart-plus" style="color: #27ae60;"></i> Nueva Venta
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{% url 'admin:products_venta_changelist' %}">
+                <i class="fas fa-history"></i> Historial de Ventas
+            </a>
+        </div>
+        
+        <div class="nav-divider"></div>
+        
+        <!-- Gestión de Productos -->
+        <div class="nav-item">
+            <a href="{% url 'admin:products_producto_changelist' %}">
+                <i class="fas fa-pills"></i> Productos
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{% url 'admin:products_producto_add' %}">
+                <i class="fas fa-plus-circle"></i> Nuevo Producto
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{% url 'admin:products_categoria_changelist' %}">
+                <i class="fas fa-tags"></i> Categorías
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{% url 'admin:products_categoria_add' %}">
+                <i class="fas fa-plus-circle"></i> Nueva Categoría
+            </a>
+        </div>
+        
+        <div class="nav-divider"></div>
+        
+        <!-- Enlaces rápidos -->
+        <div class="nav-item">
+            <a href="{% url 'core:home' %}" target="_blank">
+                <i class="fas fa-store"></i> Ver Tienda
+            </a>
+        </div>
+        <div class="nav-item">
+            <a href="{% url 'admin:index' %}">
+                <i class="fas fa-cog"></i> Admin Completo
+            </a>
+        </div>
+    </aside>
+    
+    <!-- ===== CONTENIDO PRINCIPAL ===== -->
+    <main class="main-dashboard">
+        <!-- Header -->
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h4 class="text-primary-custom m-0">
+                <i class="fas fa-chart-line"></i> Dashboard
+            </h4>
+            <span class="text-muted small">
+                <i class="fas fa-calendar-alt"></i> {% now "l, d/m/Y" %}
+            </span>
+        </div>
+        
+        <!-- Métricas de Productos -->
+        <h6 class="text-muted mb-3"><i class="fas fa-pills"></i> Productos</h6>
+        <div class="metricas">
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted">Total Productos</h6>
+                    <h3 class="text-primary-custom">{{ total_productos }}</h3>
+                    <i class="fas fa-boxes icon"></i>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted">Activos</h6>
+                    <h3 class="text-success">{{ productos_activos }}</h3>
+                    <i class="fas fa-check-circle icon"></i>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted">Sin Stock</h6>
+                    <h3 class="text-danger">{{ productos_sin_stock }}</h3>
+                    <i class="fas fa-exclamation-circle icon"></i>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted">Stock Bajo</h6>
+                    <h3 class="text-warning">{{ productos_stock_bajo }}</h3>
+                    <i class="fas fa-exclamation-triangle icon"></i>
+                </div>
+            </div>
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="text-muted">Por Vencer (30d)</h6>
+                    <h3 class="text-danger">{{ productos_por_vencer }}</h3>
+                    <i class="fas fa-clock icon"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Métricas de Ventas -->
+        <h6 class="text-muted mt-4 mb-3"><i class="fas fa-shopping-cart"></i> Ventas</h6>
+        <div class="metricas">
+            <div class="card" style="border-left: 4px solid #27ae60;">
+                <div class="card-body">
+                    <h6 class="text-muted">Ventas Hoy</h6>
+                    <h3 class="text-success">{{ total_ventas_hoy }}</h3>
+                    <small class="text-muted">{{ items_vendidos_hoy }} items</small>
+                    <i class="fas fa-shopping-bag icon"></i>
+                </div>
+            </div>
+            <div class="card" style="border-left: 4px solid #1a5276;">
+                <div class="card-body">
+                    <h6 class="text-muted">Monto Hoy</h6>
+                    <h3 class="text-primary-custom">${{ monto_ventas_hoy|floatformat:2 }}</h3>
+                    <i class="fas fa-dollar-sign icon"></i>
+                </div>
+            </div>
+            <div class="card" style="border-left: 4px solid #3498db;">
+                <div class="card-body">
+                    <h6 class="text-muted">Ventas del Mes</h6>
+                    <h3 class="text-info">{{ total_ventas_mes }}</h3>
+                    <i class="fas fa-calendar-alt icon"></i>
+                </div>
+            </div>
+            <div class="card" style="border-left: 4px solid #2ecc71;">
+                <div class="card-body">
+                    <h6 class="text-muted">Monto del Mes</h6>
+                    <h3 class="text-secondary-custom">${{ monto_ventas_mes|floatformat:2 }}</h3>
+                    <i class="fas fa-money-bill-wave icon"></i>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Gráficos de Ventas -->
+        <div class="row g-4">
+            <div class="col-lg-6">
+                <div class="chart-container">
+                    <h5><i class="fas fa-chart-bar"></i> Ventas por Día (7 días)</h5>
+                    <canvas id="diasVentasChart"></canvas>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="chart-container">
+                    <h5><i class="fas fa-chart-line"></i> Monto por Día (7 días)</h5>
+                    <canvas id="diasMontosChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Gráficos de Productos -->
+        <div class="row g-4 mt-1">
+            <div class="col-lg-6">
+                <div class="chart-container">
+                    <h5><i class="fas fa-chart-bar"></i> Productos por Categoría</h5>
+                    <canvas id="categoriasChart"></canvas>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="chart-container">
+                    <h5><i class="fas fa-chart-pie"></i> Distribución de Stock</h5>
+                    <canvas id="stockChart"></canvas>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tablas -->
+        <div class="row g-4 mt-1">
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h5><i class="fas fa-trophy"></i> Productos Más Vendidos</h5>
+                    <div style="max-height: 300px; overflow-y: auto;">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Producto</th>
+                                    <th>Cantidad</th>
+                                    <th>Ingresos</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for producto in productos_top %}
+                                    <tr>
+                                        <td>{{ producto.producto__nombre }}</td>
+                                        <td><span class="badge bg-secondary">{{ producto.total_vendido }}</span></td>
+                                        <td><span class="badge bg-success">${{ producto.total_ingresos|floatformat:2 }}</span></td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="3" class="text-muted text-center">No hay ventas registradas</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="chart-container">
+                    <h5><i class="fas fa-clock"></i> Últimas Ventas</h5>
+                    <div style="max-height: 300px; overflow-y: auto;">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Cliente</th>
+                                    <th>Total</th>
+                                    <th>Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for venta in ultimas_ventas %}
+                                    <tr>
+                                        <td>{{ venta.id }}</td>
+                                        <td>{{ venta.cliente_nombre|default:"Sin nombre" }}</td>
+                                        <td><span class="badge bg-primary-custom">${{ venta.total|floatformat:2 }}</span></td>
+                                        <td><small>{{ venta.fecha|date:"d/m/Y H:i" }}</small></td>
+                                    </tr>
+                                {% empty %}
+                                    <tr>
+                                        <td colspan="4" class="text-muted text-center">No hay ventas registradas</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+</div>
+
+<!-- ===== CHART.JS ===== -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Colores personalizados
+    const colors = {
+        primary: '#1a5276',
+        secondary: '#27ae60',
+        danger: '#e74c3c',
+        warning: '#f39c12',
+        info: '#3498db',
+        purple: '#8e44ad',
+        orange: '#e67e22',
+        teal: '#1abc9c'
+    };
+    
+    // ===== DATOS POR DEFECTO =====
+    let diasLabels = [];
+    let diasVentasData = [];
+    let diasMontosData = [];
+    let categoriasLabels = [];
+    let categoriasData = [];
+    let stockLabels = [];
+    let stockData = [];
+    
+    // ===== CARGAR DATOS DESDE EL TEMPLATE =====
+    try {
+        diasLabels = JSON.parse('{{ dias_labels|escapejs }}' || '[]');
+        diasVentasData = JSON.parse('{{ dias_ventas|escapejs }}' || '[]');
+        diasMontosData = JSON.parse('{{ dias_montos|escapejs }}' || '[]');
+        categoriasLabels = JSON.parse('{{ categorias_labels|escapejs }}' || '[]');
+        categoriasData = JSON.parse('{{ categorias_data|escapejs }}' || '[]');
+        stockLabels = JSON.parse('{{ stock_labels|escapejs }}' || '[]');
+        stockData = JSON.parse('{{ stock_data|escapejs }}' || '[]');
+    } catch(e) {
+        console.warn('Error al parsear datos:', e);
+        // Datos de ejemplo
+        diasLabels = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom'];
+        diasVentasData = [0, 0, 0, 0, 0, 0, 0];
+        diasMontosData = [0, 0, 0, 0, 0, 0, 0];
+        categoriasLabels = ['Sin categorías'];
+        categoriasData = [0];
+        stockLabels = ['Sin stock'];
+        stockData = [0];
+    }
+    
+    // 1. Gráfico de Ventas por Día (Barras)
+    const ctx1 = document.getElementById('diasVentasChart');
+    if (ctx1) {
+        new Chart(ctx1.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: diasLabels,
+                datasets: [{
+                    label: 'Ventas',
+                    data: diasVentasData,
+                    backgroundColor: 'rgba(26, 82, 118, 0.7)',
+                    borderColor: '#1a5276',
+                    borderWidth: 2,
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.parsed.y + ' ventas';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    }
+                }
+            }
+        });
+    }
+    
+    // 2. Gráfico de Monto por Día (Línea)
+    const ctx2 = document.getElementById('diasMontosChart');
+    if (ctx2) {
+        new Chart(ctx2.getContext('2d'), {
+            type: 'line',
+            data: {
+                labels: diasLabels,
+                datasets: [{
+                    label: 'Monto ($)',
+                    data: diasMontosData,
+                    backgroundColor: 'rgba(46, 204, 113, 0.1)',
+                    borderColor: '#27ae60',
+                    borderWidth: 3,
+                    tension: 0.3,
+                    fill: true,
+                    pointBackgroundColor: '#27ae60',
+                    pointBorderColor: '#fff',
+                    pointBorderWidth: 2
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return '$' + context.parsed.y.toFixed(2);
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+    
+    // 3. Gráfico de Productos por Categoría (Barras)
+    const ctx3 = document.getElementById('categoriasChart');
+    if (ctx3 && categoriasLabels.length > 0 && categoriasData.length > 0) {
+        new Chart(ctx3.getContext('2d'), {
+            type: 'bar',
+            data: {
+                labels: categoriasLabels,
+                datasets: [{
+                    label: 'Productos',
+                    data: categoriasData,
+                    backgroundColor: 'rgba(26, 82, 118, 0.7)',
+                    borderColor: '#1a5276',
+                    borderWidth: 2,
+                    borderRadius: 5
+                }]
+            },
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: { display: false },
+                    tooltip: {
+                        callbacks: {
+                            label: function(context) {
+                                return context.parsed.y + ' productos';
+                            }
+                        }
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { stepSize: 1 }
+                    }
+                }
+            }
+        });
+    }
+    
+    // 4. Gráfico de Distribución de Stock (Torta)
+    const ctx4 = document.getElementById('stockChart');
+    if (ctx4 && stockLabels.length > 0 && stockData.length > 0) {
+        const total = stockData.reduce((a, b) => a + b, 0);
+        if (total > 0) {
+            new Chart(ctx4.getContext('2d'), {
+                type: 'pie',
+                data: {
+                    labels: stockLabels,
+                    datasets: [{
+                        data: stockData,
+                        backgroundColor: [
+                            'rgba(26, 82, 118, 0.8)',
+                            'rgba(46, 204, 113, 0.8)',
+                            'rgba(231, 76, 60, 0.8)',
+                            'rgba(243, 156, 18, 0.8)',
+                            'rgba(52, 152, 219, 0.8)',
+                            'rgba(142, 68, 173, 0.8)'
+                        ],
+                        borderWidth: 2,
+                        borderColor: '#fff'
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                            labels: { padding: 10 }
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    let total = context.dataset.data.reduce((a, b) => a + b, 0);
+                                    if (total === 0) return context.label + ': 0';
+                                    let percentage = ((context.parsed / total) * 100).toFixed(1);
+                                    return context.label + ': ' + context.parsed + ' (' + percentage + '%)';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+    }
+});
+</script>
+{% endblock %}

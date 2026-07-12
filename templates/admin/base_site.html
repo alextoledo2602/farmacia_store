@@ -1,0 +1,20 @@
+<!-- templates/admin/base_site.html -->
+{% extends "admin/base_site.html" %}
+
+{% block nav-global %}
+    <div style="float: right; margin: 10px 20px;">
+        <a href="{% url 'core:dashboard' %}" 
+           style="background: #27ae60; color: white; padding: 8px 20px; 
+                  border-radius: 20px; text-decoration: none; font-weight: 600;
+                  transition: all 0.3s ease;">
+            <i class="fas fa-arrow-left"></i> Volver al Dashboard
+        </a>
+        <a href="{% url 'core:home' %}" 
+           style="background: #1a5276; color: white; padding: 8px 20px; 
+                  border-radius: 20px; text-decoration: none; font-weight: 600;
+                  margin-left: 10px; transition: all 0.3s ease;">
+            <i class="fas fa-store"></i> Ver Tienda
+        </a>
+    </div>
+    {{ block.super }}
+{% endblock %}

@@ -1,0 +1,110 @@
+{% extends "base.html" %}
+
+{% block title %}Productos - FarmaOnline{% endblock %}
+
+{% block content %}
+<div class="productos-lista">
+    <h2 class="text-primary-custom mb-4">
+        <i class="fas fa-pills"></i> Todos los Productos
+    </h2>
+
+    <!-- Filtros y búsqueda -->
+    <form method="get" class="mb-4">
+        <div class="row g-3">
+            <div class="col-md-4">
+                <input type="text" name="q" class="form-control" 
+                       placeholder="Buscar productos..." 
+                       value="{{ request.GET.q }}">
+            </div>
+            <div class="col-md-4">
+                <select name="categoria" class="form-select">
+                    <option value="">Todas las categorías</option>
+                    {% for categoria in categorias %}
+                        <option value="{{ categoria.id }}" 
+                                {% if request.GET.categoria == categoria.id|stringformat:"s" %}selected{% endif %}>
+                            {{ categoria.nombre }}
+                        </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-md-4">
+                <button type="submit" class="btn btn-primary-custom w-100">
+                    <i class="fas fa-search"></i> Filtrar
+                </button>
+            </div>
+        </div>
+    </form>
+
+    <!-- Resultados -->
+    {% if productos %}
+        <div class="row g-4">
+            {% for producto in productos %}
+                <div class="col-md-4 col-sm-6 col-12">
+                    <div class="card card-shadow h-100">
+                        <div class="card-body">
+                            <div class="text-center mb-3">
+                                <i class="fas fa-prescription-bottle" 
+                                   style="font-size: 3rem; color: var(--color-primary-light);"></i>
+                            </div>
+                            <h5 class="card-title text-primary-custom">
+                                {{ producto.nombre }}
+                            </h5>
+                            <p class="card-text text-muted small">
+                                <i class="fas fa-tag"></i> {{ producto.categoria.nombre|default:"Sin categoría" }}
+                            </p>
+                            <p class="card-text">
+                                <span class="badge bg-secondary-custom">
+                                    <i class="fas fa-box"></i> Stock: {{ producto.cantidad_existente }}
+                                </span>
+                            </p>
+                            <h4 class="text-secondary-custom">
+                                ${{ producto.precio }}
+                            </h4>
+                            {% if producto.requiere_receta %}
+                                <span class="badge bg-warning text-dark">
+                                    <i class="fas fa-prescription"></i> Receta Médica
+                                </span>
+                            {% endif %}
+                            {% if not producto.esta_disponible %}
+                                <span class="badge bg-danger">
+                                    <i class="fas fa-times-circle"></i> Agotado
+                                </span>
+                            {% endif %}
+                        </div>
+                        <div class="card-footer bg-transparent border-0 text-center">
+                            {% if producto.esta_disponible %}
+                                <button class="btn btn-primary-custom btn-sm w-100">
+                                    <i class="fas fa-shopping-cart"></i> Agregar al Carrito
+                                </button>
+                            {% else %}
+                                <button class="btn btn-secondary btn-sm w-100" disabled>
+                                    <i class="fas fa-ban"></i> No disponible
+                                </button>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            {% endfor %}
+        </div>
+    {% else %}
+        <div class="alert alert-warning">
+            <i class="fas fa-exclamation-triangle"></i> 
+            No se encontraron productos con los filtros seleccionados.
+        </div>
+    {% endif %}
+</div>
+
+<style>
+    .productos-lista {
+        padding: 0.5rem 0;
+    }
+    
+    .card-footer .btn-primary-custom {
+        background: var(--color-primary);
+    }
+    
+    .card-footer .btn-primary-custom:hover {
+        background: var(--color-secondary);
+    }
+</style>
+{% endblock %}

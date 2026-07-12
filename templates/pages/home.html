@@ -1,0 +1,399 @@
+{% extends "base.html" %}
+
+{% block title %}Farmacia Cienfuegos - Tu farmacia de confianza{% endblock %}
+
+{% block content %}
+<div class="home-page">
+    <!-- Mensaje de bienvenida -->
+    <div class="welcome-section text-center mb-5">
+        <h1 class="display-4 text-primary-custom">
+            <i class="fas fa-prescription-bottle me-2"></i>
+            Bienvenido a Farmacia Cienfuegos
+        </h1>
+        <p class="lead text-secondary-custom">
+            Tu farmacia en línea con productos de calidad y precios accesibles
+        </p>
+        <hr class="my-4" style="border-color: var(--color-primary-light);">
+    </div>
+
+    <!-- Mostrar categorías -->
+    {% if categorias %}
+    <div class="categorias-section mb-5">
+        <h3 class="text-primary-custom mb-3">
+            <i class="fas fa-tags"></i> Categorías
+        </h3>
+        <div class="d-flex flex-wrap gap-2">
+            <a href="{% url 'core:productos' %}" class="btn btn-outline-primary">
+                Todas
+            </a>
+            {% for categoria in categorias %}
+                <a href="{% url 'core:productos' %}?categoria={{ categoria.id }}" 
+                   class="btn btn-outline-secondary-custom">
+                    {{ categoria.nombre }}
+                </a>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+
+    <!-- Productos destacados -->
+    <div class="productos-section">
+        <h3 class="text-primary-custom mb-4">
+            <i class="fas fa-star"></i> Productos Destacados
+        </h3>
+        
+        {% if productos %}
+            <div class="row g-4">
+                {% for producto in productos %}
+                    <div class="col-md-3 col-sm-6 col-12">
+                        <div class="card card-shadow h-100">
+                            <div class="card-body">
+                                <div class="text-center mb-3">
+                                    <i class="fas fa-pills" style="font-size: 3rem; color: var(--color-primary-light);"></i>
+                                </div>
+                                <h5 class="card-title text-primary-custom">
+                                    {{ producto.nombre }}
+                                </h5>
+                                <p class="card-text text-muted small">
+                                    <i class="fas fa-tag"></i> {{ producto.categoria.nombre|default:"Sin categoría" }}
+                                </p>
+                                <p class="card-text">
+                                    <span class="badge bg-secondary-custom">
+                                        <i class="fas fa-box"></i> Stock: {{ producto.cantidad_existente }}
+                                    </span>
+                                </p>
+                                <h4 class="text-secondary-custom">
+                                    ${{ producto.precio }}
+                                </h4>
+                                {% if producto.requiere_receta %}
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="fas fa-prescription"></i> Receta Médica
+                                    </span>
+                                {% endif %}
+                            </div>
+                            <div class="card-footer bg-transparent border-0 text-center">
+                                {% if producto.esta_disponible %}
+                                    <button class="btn btn-primary-custom btn-sm w-100 btn-agregar-carrito" 
+                                            data-producto-id="{{ producto.id }}">
+                                        <i class="fas fa-shopping-cart"></i> Agregar al Carrito
+                                    </button>
+                                {% else %}
+                                    <button class="btn btn-secondary btn-sm w-100" disabled>
+                                        <i class="fas fa-ban"></i> No disponible
+                                    </button>
+                                {% endif %}
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="alert alert-info">
+                <i class="fas fa-info-circle"></i> No hay productos disponibles en este momento.
+            </div>
+        {% endif %}
+    </div>
+    
+</div>
+
+<style>
+    .btn-outline-secondary-custom {
+        color: var(--color-secondary);
+        border: 2px solid var(--color-secondary);
+        border-radius: 20px;
+        padding: 5px 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-outline-secondary-custom:hover {
+        background: var(--color-secondary);
+        color: white;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+    }
+    
+    .productos-section {
+        margin-top: 2rem;
+    }
+    
+    .card-footer .btn-primary-custom {
+        background: var(--color-primary);
+        color: white;
+        border: none;
+        padding: 8px 12px;
+        border-radius: 25px;
+        transition: all 0.3s ease;
+        font-weight: 600;
+        font-size: 0.9rem;
+    }
+    
+    .card-footer .btn-primary-custom:hover {
+        background: var(--color-secondary);
+        transform: scale(1.02);
+        box-shadow: 0 4px 15px rgba(46, 204, 113, 0.4);
+    }
+    
+    .card-footer .btn-primary-custom:disabled {
+        opacity: 0.7;
+        cursor: not-allowed;
+    }
+    
+    .card-shadow {
+        box-shadow: 0 4px 15px rgba(26, 82, 118, 0.08);
+        border: none;
+        border-radius: 15px;
+        transition: all 0.3s ease;
+        overflow: hidden;
+    }
+    
+    .card-shadow:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 8px 30px rgba(26, 82, 118, 0.15);
+    }
+    
+    .badge-secondary-custom {
+        background: var(--color-secondary);
+        color: white;
+        font-weight: 500;
+        padding: 5px 12px;
+        border-radius: 20px;
+    }
+    
+    .text-secondary-custom {
+        color: var(--color-secondary) !important;
+    }
+    
+    .beneficios-section {
+        border-top: 2px solid #e8f5e9;
+    }
+    
+    .beneficios-section i {
+        transition: all 0.3s ease;
+    }
+    
+    .beneficios-section .col-md-4:hover i {
+        transform: scale(1.2) rotate(-5deg);
+    }
+    
+    /* ===== TOAST NOTIFICATIONS ===== */
+    .toast-container {
+        position: fixed;
+        top: 90px;
+        right: 20px;
+        z-index: 9999;
+        max-width: 350px;
+        width: 100%;
+    }
+    
+    .toast-custom {
+        background: white;
+        border-radius: 12px;
+        padding: 15px 20px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        margin-bottom: 10px;
+        animation: slideIn 0.5s ease;
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        border-left: 5px solid var(--color-secondary);
+    }
+    
+    .toast-custom.error {
+        border-left-color: #e74c3c;
+    }
+    
+    .toast-custom .toast-icon {
+        font-size: 1.5rem;
+    }
+    
+    .toast-custom .toast-message {
+        flex: 1;
+        font-weight: 500;
+        color: #2c3e50;
+    }
+    
+    .toast-custom .toast-close {
+        cursor: pointer;
+        color: #999;
+        font-size: 1.2rem;
+        transition: color 0.3s ease;
+    }
+    
+    .toast-custom .toast-close:hover {
+        color: #333;
+    }
+    
+    @keyframes slideIn {
+        from {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateX(0);
+            opacity: 1;
+        }
+    }
+    
+    @keyframes slideOut {
+        from {
+            transform: translateX(0);
+            opacity: 1;
+        }
+        to {
+            transform: translateX(100%);
+            opacity: 0;
+        }
+    }
+    
+    .toast-custom.hide {
+        animation: slideOut 0.5s ease forwards;
+    }
+    
+    @media (max-width: 768px) {
+        .welcome-section h1 {
+            font-size: 2rem;
+        }
+        
+        .welcome-section .lead {
+            font-size: 1rem;
+        }
+        
+        .productos-section .card .card-title {
+            font-size: 0.9rem;
+        }
+        
+        .productos-section .card .btn-primary-custom {
+            font-size: 0.8rem;
+            padding: 6px 10px;
+        }
+    }
+</style>
+
+<!-- ===== TOAST CONTAINER ===== -->
+<div id="toastContainer" class="toast-container"></div>
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+// ===== TOAST NOTIFICATION =====
+function showToast(message, type = 'success') {
+    const container = document.getElementById('toastContainer');
+    
+    const toast = document.createElement('div');
+    toast.className = `toast-custom ${type}`;
+    
+    const icon = type === 'success' ? '✅' : '❌';
+    const iconColor = type === 'success' ? 'var(--color-secondary)' : '#e74c3c';
+    
+    toast.innerHTML = `
+        <span class="toast-icon" style="color: ${iconColor}">${icon}</span>
+        <span class="toast-message">${message}</span>
+        <span class="toast-close" onclick="closeToast(this)">×</span>
+    `;
+    
+    container.appendChild(toast);
+    
+    // Auto-eliminar después de 5 segundos
+    setTimeout(() => {
+        closeToast(toast.querySelector('.toast-close'));
+    }, 5000);
+}
+
+function closeToast(element) {
+    const toast = element.closest('.toast-custom');
+    if (toast) {
+        toast.classList.add('hide');
+        setTimeout(() => {
+            toast.remove();
+        }, 500);
+    }
+}
+
+// ===== OBTENER TOKEN CSRF =====
+function getCSRFToken() {
+    const cookieValue = document.cookie
+        .split('; ')
+        .find(row => row.startsWith('csrftoken='));
+    return cookieValue ? cookieValue.split('=')[1] : null;
+}
+
+// ===== AGREGAR AL CARRITO =====
+function agregarAlCarrito(productoId, button) {
+    const originalText = button.innerHTML;
+    
+    // Mostrar estado de carga
+    button.disabled = true;
+    button.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Agregando...';
+    
+    const csrfToken = getCSRFToken();
+    
+    fetch("{% url 'core:agregar_al_carrito' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': csrfToken || document.querySelector('[name=csrfmiddlewaretoken]')?.value || ''
+        },
+        body: `producto_id=${productoId}&cantidad=1`
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error('Error en la respuesta del servidor');
+        }
+        return response.json();
+    })
+    .then(data => {
+        if (data.success) {
+            showToast(data.message, 'success');
+            actualizarContadorCarrito(data.total_items);
+        } else {
+            showToast(data.error || 'Error al agregar al carrito', 'error');
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        showToast('Error al agregar al carrito. Por favor, intenta de nuevo.', 'error');
+    })
+    .finally(() => {
+        button.disabled = false;
+        button.innerHTML = originalText;
+    });
+}
+
+// ===== ACTUALIZAR CONTADOR DEL CARRITO =====
+function actualizarContadorCarrito(total) {
+    const contador = document.getElementById('contador-carrito');
+    if (contador) {
+        contador.textContent = total;
+        contador.style.display = total > 0 ? 'inline' : 'none';
+    }
+}
+
+// ===== INICIALIZAR EVENT LISTENERS =====
+document.addEventListener('DOMContentLoaded', function() {
+    // Agregar event listeners a todos los botones "Agregar al Carrito"
+    document.querySelectorAll('.btn-agregar-carrito').forEach(button => {
+        button.addEventListener('click', function(e) {
+            e.preventDefault();
+            const productoId = this.dataset.productoId;
+            agregarAlCarrito(productoId, this);
+        });
+    });
+    
+    // Obtener contador inicial del carrito
+    fetch("{% url 'core:ver_carrito' %}", {
+        method: 'GET',
+        headers: {
+            'X-Requested-With': 'XMLHttpRequest'
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data && data.total_items !== undefined) {
+            actualizarContadorCarrito(data.total_items);
+        }
+    })
+    .catch(error => {
+        console.log('Error al obtener contador:', error);
+    });
+});
+</script>
+{% endblock %}

@@ -1,0 +1,268 @@
+{% extends "base.html" %}
+
+{% block title %}Carrito - FarmaOnline{% endblock %}
+
+{% block content %}
+<div class="carrito-container">
+    <h2 class="text-primary-custom mb-4">
+        <i class="fas fa-shopping-cart"></i> Mi Carrito
+    </h2>
+    
+    {% if productos_carrito %}
+        <div class="row">
+            <div class="col-lg-8">
+                {% for item in productos_carrito %}
+                    <div class="card mb-3 card-shadow">
+                        <div class="card-body">
+                            <div class="row align-items-center">
+                                <div class="col-md-5">
+                                    <h5 class="text-primary-custom">{{ item.producto.nombre }}</h5>
+                                    <small class="text-muted">{{ item.producto.categoria.nombre|default:"Sin categoría" }}</small>
+                                </div>
+                                <div class="col-md-3">
+                                    <div class="input-group">
+                                        <button class="btn btn-outline-secondary btn-sm" onclick="actualizarCantidad('{{ item.producto.id }}', -1)">-</button>
+                                        <input type="number" class="form-control text-center" 
+                                               value="{{ item.cantidad }}" min="1" 
+                                               id="cantidad_{{ item.producto.id }}"
+                                               onchange="actualizarCantidadManual('{{ item.producto.id }}', this.value)">
+                                        <button class="btn btn-outline-secondary btn-sm" onclick="actualizarCantidad('{{ item.producto.id }}', 1)">+</button>
+                                    </div>
+                                </div>
+                                <div class="col-md-2 text-center">
+                                    <h5 class="text-secondary-custom">${{ item.subtotal|floatformat:2 }}</h5>
+                                </div>
+                                <div class="col-md-2 text-end">
+                                    <button class="btn btn-danger btn-sm" onclick="eliminarProducto('{{ item.producto.id }}')">
+                                        <i class="fas fa-trash"></i>
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <div class="col-lg-4">
+                <div class="card card-shadow">
+                    <div class="card-body">
+                        <h5 class="text-primary-custom">Resumen del Pedido</h5>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal:</span>
+                            <span>${{ total|floatformat:2 }}</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Envío:</span>
+                            <span class="text-success">¡Gratis!</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-3">
+                            <h5><strong>Total:</strong></h5>
+                            <h5 class="text-secondary-custom"><strong>${{ total|floatformat:2 }}</strong></h5>
+                        </div>
+                        
+                        <!-- Formulario para WhatsApp -->
+                        <form id="whatsappForm">
+                            {% csrf_token %}
+                            <div class="mb-3">
+                                <label class="form-label">Tu Nombre</label>
+                                <input type="text" class="form-control" id="clienteNombre" required>
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Tu Teléfono</label>
+                                <input type="tel" class="form-control" id="clienteTelefono" required>
+                            </div>
+                            <button type="submit" class="btn btn-success w-100">
+                                <i class="fab fa-whatsapp"></i> Enviar Pedido por WhatsApp
+                            </button>
+                        </form>
+                        
+                        <button class="btn btn-outline-danger w-100 mt-2" onclick="vaciarCarrito()">
+                            <i class="fas fa-trash-alt"></i> Vaciar Carrito
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    {% else %}
+        <div class="text-center py-5">
+            <i class="fas fa-shopping-cart" style="font-size: 4rem; color: #ddd;"></i>
+            <h4 class="mt-3 text-muted">Tu carrito está vacío</h4>
+            <a href="{% url 'core:home' %}" class="btn btn-primary-custom mt-3">
+                <i class="fas fa-store"></i> Seguir Comprando
+            </a>
+        </div>
+    {% endif %}
+</div>
+
+<script>
+// ===== ACTUALIZAR CANTIDAD =====
+function actualizarCantidad(productoId, delta) {
+    const input = document.getElementById(`cantidad_${productoId}`);
+    let nuevaCantidad = parseInt(input.value) + delta;
+    if (nuevaCantidad < 1) nuevaCantidad = 1;
+    actualizarCantidadManual(productoId, nuevaCantidad);
+}
+
+function actualizarCantidadManual(productoId, cantidad) {
+    fetch("{% url 'core:actualizar_cantidad' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: `producto_id=${productoId}&cantidad=${cantidad}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(data.error);
+        }
+    });
+}
+
+// ===== ELIMINAR PRODUCTO =====
+function eliminarProducto(productoId) {
+    if (!confirm('¿Eliminar este producto del carrito?')) return;
+    
+    fetch("{% url 'core:eliminar_del_carrito' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: `producto_id=${productoId}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    });
+}
+
+// ===== VACIAR CARRITO =====
+function vaciarCarrito() {
+    if (!confirm('¿Vaciar completamente el carrito?')) return;
+    
+    fetch("{% url 'core:vaciar_carrito' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        }
+    });
+}
+
+// ===== ENVIAR POR WHATSAPP =====
+document.getElementById('whatsappForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const nombre = document.getElementById('clienteNombre').value.trim();
+    const telefono = document.getElementById('clienteTelefono').value.trim();
+    
+    if (!nombre || !telefono) {
+        alert('Por favor, ingresa tu nombre y teléfono.');
+        return;
+    }
+    
+    fetch("{% url 'core:enviar_pedido_whatsapp' %}", {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        },
+        body: `cliente_nombre=${encodeURIComponent(nombre)}&cliente_telefono=${encodeURIComponent(telefono)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            // Abrir WhatsApp en nueva pestaña
+            window.open(data.whatsapp_url, '_blank');
+            
+            // Opcional: vaciar carrito después del envío
+            setTimeout(() => {
+                if (confirm('¿Pedido enviado. Deseas vaciar el carrito?')) {
+                    vaciarCarrito();
+                }
+            }, 2000);
+        } else {
+            alert(data.error);
+        }
+    });
+});
+</script>
+
+<style>
+    .carrito-container {
+        padding: 20px 0;
+    }
+    
+    .btn-primary-custom {
+        background: var(--color-primary);
+        color: white;
+        border: none;
+        padding: 10px 25px;
+        border-radius: 25px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-primary-custom:hover {
+        background: var(--color-primary-light);
+        transform: translateY(-2px);
+        color: white;
+    }
+    
+    .btn-success {
+        background: #25D366;
+        border: none;
+        padding: 12px;
+        border-radius: 25px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-success:hover {
+        background: #128C7E;
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(37, 211, 102, 0.4);
+    }
+    
+    .card-shadow {
+        box-shadow: 0 4px 15px rgba(26, 82, 118, 0.08);
+        border: none;
+        border-radius: 15px;
+        transition: all 0.3s ease;
+    }
+    
+    .card-shadow:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 8px 25px rgba(26, 82, 118, 0.15);
+    }
+    
+    .input-group .btn-outline-secondary {
+        border-color: #ddd;
+        background: white;
+    }
+    
+    .input-group .btn-outline-secondary:hover {
+        background: var(--color-primary);
+        color: white;
+        border-color: var(--color-primary);
+    }
+    
+    .input-group input {
+        border-color: #ddd;
+        max-width: 60px;
+    }
+</style>
+{% endblock %}

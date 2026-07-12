@@ -1,0 +1,661 @@
+{% extends "admin/base_site.html" %}
+
+{% block title %}Registrar Venta - FarmaOnline{% endblock %}
+
+{% block extrastyle %}
+{{ block.super }}
+<style>
+    .venta-container {
+        padding: 20px;
+        max-width: 1200px;
+        margin: 0 auto;
+    }
+    
+    .venta-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+        flex-wrap: wrap;
+        gap: 15px;
+    }
+    
+    .venta-header h2 {
+        color: var(--color-primary);
+        margin: 0;
+    }
+    
+    .venta-header h2 i {
+        margin-right: 10px;
+    }
+    
+    .venta-card {
+        background: white;
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 4px 15px rgba(26, 82, 118, 0.08);
+        margin-bottom: 20px;
+    }
+    
+    .venta-card h5 {
+        color: var(--color-primary);
+        margin-bottom: 15px;
+    }
+    
+    .producto-row {
+        display: grid;
+        grid-template-columns: 1fr 120px 100px auto;
+        gap: 15px;
+        align-items: end;
+        margin-bottom: 15px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 10px;
+        border-left: 4px solid var(--color-primary);
+        transition: all 0.3s ease;
+    }
+    
+    .producto-row:hover {
+        background: #eef2f7;
+        transform: translateX(5px);
+    }
+    
+    .producto-row .form-group {
+        margin-bottom: 0;
+    }
+    
+    .producto-row .form-group label {
+        display: block;
+        font-size: 0.85rem;
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 5px;
+    }
+    
+    .producto-row .form-group select,
+    .producto-row .form-group input {
+        width: 100%;
+        padding: 8px 12px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+    }
+    
+    .producto-row .form-group select:focus,
+    .producto-row .form-group input:focus {
+        border-color: var(--color-primary);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(26, 82, 118, 0.1);
+    }
+    
+    .producto-row .form-group .precio-display {
+        font-weight: 700;
+        color: var(--color-secondary);
+        font-size: 1.1rem;
+        padding: 8px 12px;
+        background: white;
+        border-radius: 8px;
+        border: 2px solid #e9ecef;
+        min-height: 42px;
+        display: flex;
+        align-items: center;
+    }
+    
+    .btn-remove-producto {
+        background: #e74c3c;
+        color: white;
+        border: none;
+        border-radius: 8px;
+        padding: 8px 15px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        height: 42px;
+        display: flex;
+        align-items: center;
+        gap: 5px;
+    }
+    
+    .btn-remove-producto:hover {
+        background: #c0392b;
+        transform: scale(1.05);
+    }
+    
+    .btn-add-producto {
+        background: var(--color-primary);
+        color: white;
+        border: none;
+        padding: 10px 25px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        cursor: pointer;
+    }
+    
+    .btn-add-producto:hover {
+        background: var(--color-primary-light);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(26, 82, 118, 0.3);
+    }
+    
+    /* ===== BOTÓN REGISTRAR - CORREGIDO ===== */
+    .btn-registrar-venta {
+        background: green;
+        color: white;
+        border: none;
+        padding: 15px 40px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1.2rem;
+        transition: all 0.3s ease;
+        cursor: pointer;
+        width: 100%;
+        display: block;
+        margin-top: 20px;
+        box-shadow: 0 4px 15px rgba(46, 204, 113, 0.3);
+    }
+    
+    .btn-registrar-venta:hover {
+        background: rgb(69, 168, 69);
+        transform: translateY(-3px);
+        box-shadow: 0 6px 25px rgba(46, 204, 113, 0.5);
+    }
+    
+    .btn-registrar-venta:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+        transform: none;
+    }
+    
+    .btn-registrar-venta i {
+        margin-right: 10px;
+    }
+    
+    .resumen-venta {
+        background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 20px;
+    }
+    
+    .resumen-venta .total {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--color-secondary);
+    }
+    
+    .resumen-venta .items-count {
+        font-size: 1rem;
+        color: #6c757d;
+    }
+    
+    /* ===== DATOS DEL CLIENTE ===== */
+    .cliente-info {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+    }
+    
+    .cliente-info .form-group {
+        margin-bottom: 15px;
+    }
+    
+    .cliente-info .form-group label {
+        display: block;
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #495057;
+        margin-bottom: 5px;
+    }
+    
+    .cliente-info .form-group input,
+    .cliente-info .form-group textarea {
+        width: 100%;
+        padding: 10px 15px;
+        border: 2px solid #e9ecef;
+        border-radius: 8px;
+        transition: all 0.3s ease;
+        font-size: 0.95rem;
+    }
+    
+    .cliente-info .form-group input:focus,
+    .cliente-info .form-group textarea:focus {
+        border-color: var(--color-primary);
+        outline: none;
+        box-shadow: 0 0 0 3px rgba(26, 82, 118, 0.1);
+    }
+    
+    .ui-autocomplete {
+        max-height: 200px;
+        overflow-y: auto;
+        background: white;
+        border: 2px solid var(--color-primary);
+        border-radius: 8px;
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+        padding: 5px 0;
+        z-index: 1000;
+    }
+    
+    .ui-menu-item {
+        padding: 8px 15px;
+        cursor: pointer;
+        transition: background 0.2s ease;
+    }
+    
+    .ui-menu-item:hover {
+        background: rgba(26, 82, 118, 0.08);
+    }
+    
+    .ui-menu-item .producto-info {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    
+    .ui-menu-item .producto-nombre {
+        font-weight: 600;
+        color: #2c3e50;
+    }
+    
+    .ui-menu-item .producto-detalle {
+        font-size: 0.8rem;
+        color: #6c757d;
+    }
+    
+    .ui-menu-item .producto-precio {
+        font-weight: 700;
+        color: var(--color-secondary);
+    }
+    
+    .btn-secondary {
+        background: #6c757d;
+        color: white;
+        padding: 8px 20px;
+        border-radius: 8px;
+        text-decoration: none;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-secondary:hover {
+        background: #5a6268;
+        color: white;
+        transform: translateY(-2px);
+    }
+    
+    /* ===== BOTÓN DE REGISTRAR - SIEMPRE VISIBLE ===== */
+    .registrar-wrapper {
+        margin-top: 30px;
+        padding: 10px 0;
+        border-top: 2px solid #034215;
+
+    }
+    
+    @media (max-width: 768px) {
+        .producto-row {
+            grid-template-columns: 1fr;
+            gap: 10px;
+        }
+        
+        .venta-header {
+            flex-direction: column;
+            align-items: stretch;
+            text-align: center;
+        }
+        
+        .cliente-info {
+            grid-template-columns: 1fr;
+        }
+        
+        .btn-registrar-venta {
+            font-size: 1rem;
+            padding: 12px 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="venta-container">
+    <!-- Header -->
+    <div class="venta-header">
+        <h2>
+            <i class="fas fa-cart-plus"></i> Registrar Nueva Venta
+        </h2>
+        <div>
+            <a href="{% url 'core:dashboard' %}" class="btn btn-secondary">
+                <i class="fas fa-arrow-left"></i> Volver al Dashboard
+            </a>
+        </div>
+    </div>
+
+    <!-- Formulario -->
+    <form id="ventaForm" method="post">
+        {% csrf_token %}
+        
+        <!-- Datos del Cliente -->
+        <div class="venta-card">
+            <h5><i class="fas fa-user"></i> Datos del Cliente</h5>
+            <div class="cliente-info">
+                <div class="form-group">
+                    <label for="clienteNombre">Nombre del Cliente</label>
+                    <input type="text" id="clienteNombre" name="cliente_nombre" 
+                           placeholder="Ej: Juan Pérez" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="clienteTelefono">Teléfono</label>
+                    <input type="text" id="clienteTelefono" name="cliente_telefono" 
+                           placeholder="Ej: 5491123456789" class="form-control">
+                </div>
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label for="observaciones">Observaciones</label>
+                    <textarea id="observaciones" name="observaciones" 
+                              rows="2" class="form-control"
+                              placeholder="Notas adicionales sobre la venta..."></textarea>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Productos -->
+        <div class="venta-card">
+            <h5><i class="fas fa-prescription-bottle"></i> Productos</h5>
+            
+            <!-- Contenedor de productos -->
+            <div id="productosContainer">
+                <!-- Los productos se agregarán aquí dinámicamente -->
+            </div>
+            
+            <!-- Botón para agregar producto -->
+            <button type="button" class="btn-add-producto" onclick="agregarProducto()">
+                <i class="fas fa-plus-circle"></i> Agregar Producto
+            </button>
+        </div>
+        
+        <!-- Resumen -->
+        <div class="venta-card">
+            <h5><i class="fas fa-receipt"></i> Resumen de Venta</h5>
+            <div class="resumen-venta">
+                <div class="row">
+                    <div class="col-md-6">
+                        <p class="items-count">
+                            <i class="fas fa-boxes"></i> Items: <span id="totalItems">0</span>
+                        </p>
+                    </div>
+                    <div class="col-md-6 text-end">
+                        <p class="total">
+                            Total: $<span id="totalVenta">0.00</span>
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Botón Registrar - SIEMPRE VISIBLE -->
+        <div class="registrar-wrapper">
+            <button type="submit" class="btn-registrar-venta" id="btnRegistrar">
+                <i class="fas fa-check-circle"></i> Registrar Venta
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- ===== JQUERY UI PARA AUTOCOMPLETADO ===== -->
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://code.jquery.com/ui/1.12.1/jquery-ui.min.js"></script>
+
+<script>
+let productoCounter = 0;
+let productosSeleccionados = {};
+
+// ===== AGREGAR PRODUCTO =====
+function agregarProducto(productoId = null, productoNombre = null) {
+    productoCounter++;
+    const container = document.getElementById('productosContainer');
+    
+    const row = document.createElement('div');
+    row.className = 'producto-row';
+    row.id = `producto-row-${productoCounter}`;
+    row.innerHTML = `
+        <div class="form-group">
+            <label>Producto</label>
+            <input type="text" 
+                   class="producto-autocomplete" 
+                   id="producto_${productoCounter}" 
+                   name="producto_${productoCounter}" 
+                   placeholder="Buscar producto..."
+                   value="${productoNombre || ''}"
+                   data-id="${productoId || ''}">
+            <input type="hidden" name="productos[]" id="producto_id_${productoCounter}" value="${productoId || ''}">
+        </div>
+        <div class="form-group">
+            <label>Cantidad</label>
+            <input type="number" 
+                   name="cantidades[]" 
+                   id="cantidad_${productoCounter}" 
+                   min="1" 
+                   value="1" 
+                   onchange="calcularTotal()"
+                   oninput="calcularTotal()">
+        </div>
+        <div class="form-group">
+            <label>Precio Unitario</label>
+            <div class="precio-display" id="precio_${productoCounter}">
+                $0.00
+            </div>
+        </div>
+        <button type="button" class="btn-remove-producto" onclick="eliminarProducto(${productoCounter})">
+            <i class="fas fa-trash"></i>
+        </button>
+    `;
+    
+    container.appendChild(row);
+    
+    // Inicializar autocompletado
+    initAutocomplete(`#producto_${productoCounter}`, productoCounter);
+    
+    if (productoId) {
+        cargarProducto(productoId, productoCounter);
+    }
+    
+    calcularTotal();
+}
+
+// ===== INICIALIZAR AUTOCOMPLETADO =====
+function initAutocomplete(selector, counter) {
+    $(selector).autocomplete({
+        source: function(request, response) {
+            $.ajax({
+                url: "{% url 'core:buscar_productos' %}",
+                dataType: "json",
+                data: {
+                    term: request.term
+                },
+                success: function(data) {
+                    response($.map(data, function(item) {
+                        return {
+                            label: item.nombre + ' (' + item.categoria + ') - Stock: ' + item.stock,
+                            value: item.nombre,
+                            id: item.id,
+                            precio: item.precio,
+                            stock: item.stock
+                        };
+                    }));
+                }
+            });
+        },
+        minLength: 2,
+        select: function(event, ui) {
+            const counter = $(this).data('counter');
+            
+            $(`#producto_${counter}`).val(ui.item.value);
+            $(`#producto_id_${counter}`).val(ui.item.id);
+            $(`#precio_${counter}`).text('$' + ui.item.precio.toFixed(2));
+            
+            productosSeleccionados[counter] = {
+                id: ui.item.id,
+                nombre: ui.item.value,
+                precio: ui.item.precio,
+                stock: ui.item.stock
+            };
+            
+            calcularTotal();
+            return false;
+        },
+        open: function() {
+            $(this).autocomplete('widget').css('z-index', 1000);
+        }
+    }).data('counter', counter);
+}
+
+// ===== CARGAR PRODUCTO EXISTENTE =====
+function cargarProducto(productoId, counter) {
+    $.ajax({
+        url: "{% url 'core:buscar_productos' %}",
+        dataType: "json",
+        data: {
+            term: ''
+        },
+        success: function(data) {
+            const producto = data.find(p => p.id == productoId);
+            if (producto) {
+                $(`#producto_${counter}`).val(producto.nombre);
+                $(`#producto_id_${counter}`).val(producto.id);
+                $(`#precio_${counter}`).text('$' + producto.precio.toFixed(2));
+                
+                productosSeleccionados[counter] = {
+                    id: producto.id,
+                    nombre: producto.nombre,
+                    precio: producto.precio,
+                    stock: producto.stock
+                };
+                
+                calcularTotal();
+            }
+        }
+    });
+}
+
+// ===== ELIMINAR PRODUCTO =====
+function eliminarProducto(counter) {
+    const row = document.getElementById(`producto-row-${counter}`);
+    if (row) {
+        row.style.transition = 'all 0.3s ease';
+        row.style.opacity = '0';
+        row.style.transform = 'translateX(-100px)';
+        
+        setTimeout(() => {
+            row.remove();
+            delete productosSeleccionados[counter];
+            calcularTotal();
+        }, 300);
+    }
+}
+
+// ===== CALCULAR TOTAL =====
+function calcularTotal() {
+    let total = 0;
+    let items = 0;
+    
+    document.querySelectorAll('.producto-row').forEach(row => {
+        const counter = row.id.replace('producto-row-', '');
+        const cantidadInput = document.getElementById(`cantidad_${counter}`);
+        const precioDisplay = document.getElementById(`precio_${counter}`);
+        
+        if (cantidadInput && precioDisplay) {
+            const cantidad = parseInt(cantidadInput.value) || 0;
+            const precioTexto = precioDisplay.textContent.replace('$', '');
+            const precio = parseFloat(precioTexto) || 0;
+            
+            const subtotal = cantidad * precio;
+            total += subtotal;
+            items += cantidad;
+        }
+    });
+    
+    document.getElementById('totalVenta').textContent = total.toFixed(2);
+    document.getElementById('totalItems').textContent = items;
+}
+
+// ===== ENVIAR FORMULARIO =====
+document.getElementById('ventaForm').addEventListener('submit', function(e) {
+    e.preventDefault();
+    
+    const btnRegistrar = document.getElementById('btnRegistrar');
+    btnRegistrar.disabled = true;
+    btnRegistrar.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Registrando...';
+    
+    const productosRows = document.querySelectorAll('.producto-row');
+    if (productosRows.length === 0) {
+        alert('Debe agregar al menos un producto a la venta.');
+        btnRegistrar.disabled = false;
+        btnRegistrar.innerHTML = '<i class="fas fa-check-circle"></i> Registrar Venta';
+        return;
+    }
+    
+    let valid = true;
+    productosRows.forEach(row => {
+        const counter = row.id.replace('producto-row-', '');
+        const productoId = document.getElementById(`producto_id_${counter}`).value;
+        if (!productoId) {
+            valid = false;
+            row.style.borderLeftColor = '#e74c3c';
+            row.style.borderLeftWidth = '6px';
+        }
+    });
+    
+    if (!valid) {
+        alert('Por favor, seleccione un producto válido para cada fila.');
+        btnRegistrar.disabled = false;
+        btnRegistrar.innerHTML = '<i class="fas fa-check-circle"></i> Registrar Venta';
+        return;
+    }
+    
+    const formData = new FormData(this);
+    
+    fetch("{% url 'core:registrar_venta' %}", {
+        method: 'POST',
+        body: formData,
+        headers: {
+            'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+        }
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            let mensaje = data.mensaje;
+            if (data.errores && data.errores.length > 0) {
+                mensaje += '\n\nAdvertencias:\n' + data.errores.join('\n');
+            }
+            
+            alert('✅ ' + mensaje + '\n\nVenta #' + data.venta_id + '\nTotal: $' + data.total.toFixed(2));
+            
+            // Resetear formulario
+            document.getElementById('productosContainer').innerHTML = '';
+            productoCounter = 0;
+            productosSeleccionados = {};
+            calcularTotal();
+            document.getElementById('clienteNombre').value = '';
+            document.getElementById('clienteTelefono').value = '';
+            document.getElementById('observaciones').value = '';
+            
+            agregarProducto();
+        } else {
+            alert('❌ Error: ' + (data.error || 'Error desconocido'));
+        }
+    })
+    .catch(error => {
+        console.error('Error:', error);
+        alert('❌ Error al registrar la venta. Por favor, intente nuevamente.');
+    })
+    .finally(() => {
+        btnRegistrar.disabled = false;
+        btnRegistrar.innerHTML = '<i class="fas fa-check-circle"></i> Registrar Venta';
+    });
+});
+
+// ===== INICIALIZAR =====
+document.addEventListener('DOMContentLoaded', function() {
+    agregarProducto();
+});
+</script>
+{% endblock %}
