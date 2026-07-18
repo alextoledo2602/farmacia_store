@@ -1,6 +1,8 @@
 from django.contrib import admin
 from django.utils.html import format_html
+from django.utils.safestring import mark_safe 
 from .models import Categoria, Producto, Venta, VentaItem
+
 
 @admin.register(Categoria)
 class CategoriaAdmin(admin.ModelAdmin):
@@ -40,11 +42,20 @@ class ProductoAdmin(admin.ModelAdmin):
     
     def stock_status(self, obj):
         if obj.cantidad_existente == 0:
-            return format_html('<span style="color: red; font-weight: bold;">Sin Stock</span>')
+            # CORREGIDO: Usamos mark_safe para HTML sin variables
+            return mark_safe('<span style="color: red; font-weight: bold;">Sin Stock</span>')
         elif obj.cantidad_existente <= obj.cantidad_minima:
-            return format_html('<span style="color: orange; font-weight: bold;">Stock Bajo ({})</span>', obj.cantidad_existente)
+            # CORREGIDO: Aseguramos que format_html tenga argumentos
+            return format_html(
+                '<span style="color: orange; font-weight: bold;">Stock Bajo ({})</span>',
+                obj.cantidad_existente
+            )
         else:
-            return format_html('<span style="color: green;">Disponible ({})</span>', obj.cantidad_existente)
+            # CORREGIDO: Aseguramos que format_html tenga argumentos
+            return format_html(
+                '<span style="color: green;">Disponible ({})</span>',
+                obj.cantidad_existente
+            )
     stock_status.short_description = 'Estado Stock'
 
 
