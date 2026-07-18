@@ -19,7 +19,7 @@ def home(request):
     context = {
         'productos': productos_destacados,
         'categorias': categorias,
-        'titulo': 'Bienvenido a la Farmacia Online'
+        'titulo': 'Bienvenido a Farmacia Cienfuegos'
     }
     return render(request, 'pages/home.html', context)
 
@@ -208,7 +208,7 @@ def enviar_pedido_whatsapp(request):
         
         mensaje += f"\n💰 *Total: ${total:.2f}*"
         
-        numero_admin = "5491123456789"
+        numero_admin = "5352584671"
         
         from urllib.parse import quote
         mensaje_codificado = quote(mensaje)
