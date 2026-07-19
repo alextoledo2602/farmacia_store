@@ -1,8 +1,7 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from django.utils.safestring import mark_safe 
+from django.utils.safestring import mark_safe
 from .models import Categoria, Producto, Venta, VentaItem
-
 
 @admin.register(Categoria)
 class CategoriaAdmin(admin.ModelAdmin):
@@ -13,16 +12,17 @@ class CategoriaAdmin(admin.ModelAdmin):
 @admin.register(Producto)
 class ProductoAdmin(admin.ModelAdmin):
     list_display = [
-        'nombre', 'precio', 'cantidad_existente', 
-        'categoria', 'activo', 'requiere_receta', 'stock_status'
+        'imagen_preview', 'nombre', 'precio', 'cantidad_existente', 
+        'categoria', 'activo', 'stock_status'
     ]
+    list_display_links = ['nombre']
     list_filter = ['activo', 'requiere_receta', 'categoria']
     search_fields = ['nombre', 'descripcion']
-    readonly_fields = ['created_at', 'updated_at']
+    readonly_fields = ['created_at', 'updated_at', 'imagen_preview']
     
     fieldsets = (
         ('Información Principal', {
-            'fields': ('nombre', 'descripcion', 'categoria')
+            'fields': ('nombre', 'descripcion', 'categoria', 'imagen', 'imagen_preview')
         }),
         ('Precio y Stock', {
             'fields': ('precio', 'cantidad_existente', 'cantidad_minima')
@@ -33,39 +33,48 @@ class ProductoAdmin(admin.ModelAdmin):
         ('WhatsApp', {
             'fields': ('whatsapp_link',),
             'classes': ('collapse',),
-            'description': 'Enlace personalizado de WhatsApp para este producto'
         }),
         ('Estado y Metadatos', {
             'fields': ('activo', 'created_at', 'updated_at')
         })
     )
     
+    def imagen_preview(self, obj):
+        """Muestra una vista previa de la imagen en el admin"""
+        if obj.imagen:
+            return mark_safe(
+                f'<img src="{obj.imagen.url}" width="80" height="80" '
+                f'style="object-fit: cover; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1);" />'
+            )
+        return mark_safe(
+            '<div style="width: 80px; height: 80px; background: #f0f0f0; '
+            'border-radius: 8px; display: flex; align-items: center; justify-content: center; '
+            'font-size: 0.8rem; color: #999;">Sin imagen</div>'
+        )
+    imagen_preview.short_description = 'Imagen'
+    
     def stock_status(self, obj):
+        """Muestra el estado del stock con colores - Usando mark_safe"""
         if obj.cantidad_existente == 0:
-            # CORREGIDO: Usamos mark_safe para HTML sin variables
             return mark_safe('<span style="color: red; font-weight: bold;">Sin Stock</span>')
         elif obj.cantidad_existente <= obj.cantidad_minima:
-            # CORREGIDO: Aseguramos que format_html tenga argumentos
-            return format_html(
-                '<span style="color: orange; font-weight: bold;">Stock Bajo ({})</span>',
-                obj.cantidad_existente
+            return mark_safe(
+                f'<span style="color: orange; font-weight: bold;">Stock Bajo ({obj.cantidad_existente})</span>'
             )
         else:
-            # CORREGIDO: Aseguramos que format_html tenga argumentos
-            return format_html(
-                '<span style="color: green;">Disponible ({})</span>',
-                obj.cantidad_existente
+            return mark_safe(
+                f'<span style="color: green;">Disponible ({obj.cantidad_existente})</span>'
             )
     stock_status.short_description = 'Estado Stock'
 
 
 class VentaItemInline(admin.TabularInline):
+    """Inline para agregar items en la venta"""
     model = VentaItem
     extra = 1
     autocomplete_fields = ['producto']
     fields = ['producto', 'cantidad', 'precio_unitario', 'subtotal']
     readonly_fields = ['subtotal']
-    can_delete = True
 
 
 @admin.register(Venta)
